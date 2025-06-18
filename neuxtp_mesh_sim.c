@@ -86,6 +86,8 @@ struct rte_mbuf *build_neuxtp_pkt(uint8_t ai_tag, uint8_t priority, uint16_t por
     neu->session_id = rte_rdtsc();
     neu->timestamp = rte_rdtsc_precise();
 
+    printf("[BUILD] Port %u | AI Tag: %u | Priority: %u | Session: %u\n", port_id, ai_tag, priority, neu->session_id);
+
     return mbuf;
 }
 
@@ -105,13 +107,20 @@ int lcore_mesh_io(void *arg) {
         struct rte_mbuf *pkt = build_neuxtp_pkt(core_id, 7 - core_id, port);
         if (pkt) {
             uint16_t sent = rte_eth_tx_burst(port, tx_q, &pkt, 1);
-            if (sent) conf->tx_count++;
-            else rte_pktmbuf_free(pkt);
+            if (sent) {
+                conf->tx_count++;
+                printf("[TX] Core %u | Port %u | Queue %u\n", core_id, port, tx_q);
+            } else {
+                rte_pktmbuf_free(pkt);
+            }
         }
 
         // Receive
         uint16_t nb_rx = rte_eth_rx_burst(port, rx_q, rx_bufs, BURST_SIZE);
-        if (nb_rx) conf->rx_count += nb_rx;
+        if (nb_rx) {
+            conf->rx_count += nb_rx;
+            printf("[RX] Core %u | Port %u | Queue %u | Packets: %u\n", core_id, port, rx_q, nb_rx);
+        }
         for (uint16_t i = 0; i < nb_rx; i++)
             rte_pktmbuf_free(rx_bufs[i]);
 

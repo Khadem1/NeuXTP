@@ -19,8 +19,23 @@
 #define BURST_SIZE 32
 #define MAX_PKT_BURST 32
 
-static const struct rte_eth_conf port_conf_default = {
-    .rxmode = {.max_rx_pkt_len = RTE_ETHER_MAX_LEN}
+static struct rte_eth_conf port_conf_default = {
+	.link_speeds = 0,
+	.rxmode = {
+		.mq_mode = RTE_ETH_MQ_RX_NONE,
+		//.mtu = 9000 - (RTE_ETHER_HDR_LEN + RTE_ETHER_CRC_LEN), /* Jumbo frame MTU */
+	},
+	.rx_adv_conf = {
+		.rss_conf = {
+			.rss_key = NULL,
+			.rss_key_len = 40,
+			.rss_hf = 0,
+		},
+	},
+	.txmode = {
+		.mq_mode = RTE_ETH_MQ_TX_NONE,
+	},
+	.lpbk_mode = 0,
 };
 
 static inline int
@@ -61,6 +76,9 @@ lcore_main(__attribute__((unused)) void *arg) {
         if (nb_rx == 0)
             continue;
 
+        printf("Received %d packets\n", nb_rx);
+        fflush(stdout);
+
         for (int i = 0; i < nb_rx; i++) {
             struct rte_mbuf *mbuf = bufs[i];
             uint8_t *data = rte_pktmbuf_mtod(mbuf, uint8_t *);
@@ -70,22 +88,28 @@ lcore_main(__attribute__((unused)) void *arg) {
             fwrite(data, 1, len, fp);
             fclose(fp);
 
-            int priority = system("python3 ./ai_predictor.py > /tmp/neuxtp_priority.txt");
+            system("python3 ./ai_predictor.py > /tmp/neuxtp_priority.txt");
 
             char result[10];
             FILE *rf = fopen("/tmp/neuxtp_priority.txt", "r");
             fgets(result, sizeof(result), rf);
             fclose(rf);
 
+            printf("AI result: %s\n", result);
+            fflush(stdout);
+
             if (atoi(result) > 70) {
                 rte_eth_tx_burst(port, 0, &mbuf, 1);
+                printf("Transmitted packet\n");
             } else {
                 rte_pktmbuf_free(mbuf);
+                printf("Dropped packet\n");
             }
         }
     }
     return 0;
 }
+
 
 int main(int argc, char *argv[]) {
     int ret = rte_eal_init(argc, argv);

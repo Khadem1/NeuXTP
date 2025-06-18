@@ -13,15 +13,17 @@
 #include <rte_ether.h>
 #include <rte_cycles.h>
 #include <rte_atomic.h>
+#include <rte_byteorder.h>
 
-#define NB_MBUF 8192
-#define NUM_DESC 1024
-#define MAX_CORES 128
+#define NB_MBUF       8192
+#define NUM_DESC      1024
+#define MAX_CORES     128
+#define BURST_SIZE    32
 
-#define IPv4(a, b, c, d) ((uint32_t)(((a & 0xff) << 24) | \
-                                     ((b & 0xff) << 16) | \
-                                     ((c & 0xff) << 8)  | \
-                                     (d & 0xff)))
+#define IPv4(a, b, c, d) ((uint32_t)(((a) & 0xff) << 24 | \
+                                     ((b) & 0xff) << 16 | \
+                                     ((c) & 0xff) << 8  | \
+                                     ((d) & 0xff)))
 
 volatile bool keep_running = true;
 
@@ -59,25 +61,25 @@ struct rte_mbuf *build_neuxtp_pkt(uint8_t ai_tag, uint8_t priority, uint16_t por
     mbuf->data_len = sizeof(*eth) + sizeof(*ip) + sizeof(*neu);
     mbuf->pkt_len = mbuf->data_len;
 
-    // Ethernet
-    memset(eth->dst_addr.addr_bytes, 0xff, 6);
-    memset(eth->src_addr.addr_bytes, 0xaa, 6);
+    // Ethernet Header
+    memset(eth->dst_addr.addr_bytes, 0xff, RTE_ETHER_ADDR_LEN);  // Broadcast
+    memset(eth->src_addr.addr_bytes, 0xaa, RTE_ETHER_ADDR_LEN);  // Dummy MAC
     eth->ether_type = rte_cpu_to_be_16(RTE_ETHER_TYPE_IPV4);
 
-    // IP
+    // IP Header
     ip->version_ihl = 0x45;
     ip->type_of_service = 0;
     ip->total_length = rte_cpu_to_be_16(sizeof(*ip) + sizeof(*neu));
     ip->packet_id = 0;
     ip->fragment_offset = 0;
     ip->time_to_live = 64;
-    ip->next_proto_id = 253; // custom NeuXTP
+    ip->next_proto_id = 253; // Custom protocol
     ip->hdr_checksum = 0;
     ip->src_addr = rte_cpu_to_be_32(IPv4(10, 0, port_id, 1));
     ip->dst_addr = rte_cpu_to_be_32(IPv4(10, 0, port_id ^ 1, 1));
     ip->hdr_checksum = rte_ipv4_cksum(ip);
 
-    // NeuXTP
+    // NeuXTP Header
     neu->ai_tag = ai_tag;
     neu->priority = priority;
     neu->flags = 0;
@@ -96,7 +98,7 @@ int lcore_mesh_io(void *arg) {
 
     printf("[Core %u] Sending NeuXTP packets on port %u queue %u\n", core_id, port, tx_q);
 
-    struct rte_mbuf *rx_bufs[32];
+    struct rte_mbuf *rx_bufs[BURST_SIZE];
 
     while (keep_running) {
         // Transmit
@@ -108,7 +110,7 @@ int lcore_mesh_io(void *arg) {
         }
 
         // Receive
-        uint16_t nb_rx = rte_eth_rx_burst(port, rx_q, rx_bufs, 32);
+        uint16_t nb_rx = rte_eth_rx_burst(port, rx_q, rx_bufs, BURST_SIZE);
         if (nb_rx) conf->rx_count += nb_rx;
         for (uint16_t i = 0; i < nb_rx; i++)
             rte_pktmbuf_free(rx_bufs[i]);
@@ -148,7 +150,11 @@ int main(int argc, char **argv) {
             rte_eth_tx_queue_setup(port, q, NUM_DESC, rte_eth_dev_socket_id(port), NULL);
         }
 
-        rte_eth_dev_start(port);
+        ret = rte_eth_dev_start(port);
+        if (ret < 0)
+            rte_exit(EXIT_FAILURE, "Failed to start port %u\n", port);
+
+        rte_eth_promiscuous_enable(port);
         printf("Initialized port %u\n", port);
     }
 
@@ -156,13 +162,13 @@ int main(int argc, char **argv) {
     unsigned core_id;
     RTE_LCORE_FOREACH_WORKER(core_id) {
         core_stats[core_id].port_id = i % nb_ports;
-        core_stats[core_id].tx_q = i;
-        core_stats[core_id].rx_q = i;
+        core_stats[core_id].tx_q = i % 4;
+        core_stats[core_id].rx_q = i % 4;
         rte_eal_remote_launch(lcore_mesh_io, &core_stats[core_id], core_id);
         i++;
     }
 
-    // Main loop prints stats
+    // Stats loop
     while (keep_running) {
         printf("\n==== Packet Stats (every 2s) ====\n");
         RTE_LCORE_FOREACH_WORKER(core_id) {

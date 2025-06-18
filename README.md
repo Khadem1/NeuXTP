@@ -204,6 +204,85 @@ Supports:
 
 #### Results
 ```
+./neuxtp_dpdk -l 0-1 -n 4 -- -a 0000:03:00.0
+EAL: Detected CPU lcores: 24
+EAL: Detected NUMA nodes: 2
+EAL: Detected shared linkage of DPDK
+EAL: Multi-process socket /var/run/dpdk/rte/mp_socket
+EAL: Selected IOVA mode 'VA'
+EAL: 1024 hugepages of size 2097152 reserved, but no mounted hugetlbfs found for that size
+EAL: VFIO support initialized
+
+EAL: Probe PCI driver: mlx5_pci (15b3:101d) device: 0000:03:00.0 (socket 0)
+EAL: Probe PCI driver: mlx5_pci (15b3:101d) device: 0000:03:00.1 (socket 0)
+EAL: Using IOMMU type 1 (Type 1)
+EAL: Probe PCI driver: net_ice (8086:1592) device: 0000:04:00.0 (socket 0)
+ice_load_pkg_type(): Active package is: 1.3.35.0, ICE OS Default Package (single VLAN mode)
+EAL: Probe PCI driver: net_ice (8086:1592) device: 0000:04:00.1 (socket 0)
+ice_load_pkg_type(): Active package is: 1.3.35.0, ICE OS Default Package (single VLAN mode)
+TELEMETRY: No legacy callbacks, legacy socket not created
+
+Received 1 packets
+AI result: 52
+
+Dropped packet
+Received 9 packets
+AI result: 100
+
+Transmitted packet
+AI result: 83
+
+Transmitted packet
+AI result: 84
+
+Transmitted packet
+AI result: 79
+
+Transmitted packet
+AI result: 55
+
+Dropped packet
+AI result: 55
+
+Dropped packet
+AI result: 55
+
+Dropped packet
+AI result: 95
+
+Transmitted packet
+AI result: 50
+
+Dropped packet
+```
+```
+ ./neuxtp_test -l 0-1 -n 4 -- -a 0000:03:00.0
+EAL: Detected CPU lcores: 24
+EAL: Detected NUMA nodes: 2
+EAL: Detected shared linkage of DPDK
+EAL: Multi-process socket /var/run/dpdk/rte/mp_socket
+EAL: Selected IOVA mode 'VA'
+EAL: 1024 hugepages of size 2097152 reserved, but no mounted hugetlbfs found for that size
+EAL: VFIO support initialized
+
+EAL: Probe PCI driver: mlx5_pci (15b3:101d) device: 0000:03:00.0 (socket 0)
+EAL: Probe PCI driver: mlx5_pci (15b3:101d) device: 0000:03:00.1 (socket 0)
+EAL: Using IOMMU type 1 (Type 1)
+EAL: Probe PCI driver: net_ice (8086:1592) device: 0000:04:00.0 (socket 0)
+ice_load_pkg_type(): Active package is: 1.3.35.0, ICE OS Default Package (single VLAN mode)
+EAL: Probe PCI driver: net_ice (8086:1592) device: 0000:04:00.1 (socket 0)
+ice_load_pkg_type(): Active package is: 1.3.35.0, ICE OS Default Package (single VLAN mode)
+TELEMETRY: No legacy callbacks, legacy socket not created
+
+ Simulating NeuXTP Packets with AI Tags...
+
+[+] Packet 0 created: AI_TAG=0, PRIORITY=5
+[+] Packet 1 created: AI_TAG=1, PRIORITY=4
+[+] Packet 2 created: AI_TAG=2, PRIORITY=3
+[+] Packet 3 created: AI_TAG=3, PRIORITY=2
+[+] Packet 4 created: AI_TAG=4, PRIORITY=1
+```
+```
  ./neuxtp_mesh_sim -l 0-3 -a 0000:03:00.0 -a 0000:03:00.1 --huge-dir=/mnt/huge
 EAL: Detected CPU lcores: 24
 EAL: Detected NUMA nodes: 2

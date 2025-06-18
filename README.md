@@ -202,7 +202,72 @@ Supports:
 - AI tags/priorities influence routing
 - Simulates smart cluster fabric
 
+#### Results
+```
+ ./neuxtp_mesh_sim -l 0-3 -a 0000:03:00.0 -a 0000:03:00.1 --huge-dir=/mnt/huge
+EAL: Detected CPU lcores: 24
+EAL: Detected NUMA nodes: 2
+EAL: Detected shared linkage of DPDK
+EAL: Multi-process socket /var/run/dpdk/rte/mp_socket
+EAL: Selected IOVA mode 'VA'
+EAL: 1024 hugepages of size 2097152 reserved, but no mounted hugetlbfs found for that size
+EAL: VFIO support initialized
+EAL: Probe PCI driver: mlx5_pci (15b3:101d) device: 0000:03:00.0 (socket 0)
+EAL: Probe PCI driver: mlx5_pci (15b3:101d) device: 0000:03:00.1 (socket 0)
+TELEMETRY: No legacy callbacks, legacy socket not created
+Initialized port 0
+Initialized port 1
+[Core 1] Sending NeuXTP packets on port 0 queue 0
+[Core 2] Sending NeuXTP packets on port 1 queue 1
+[Core 3] Sending NeuXTP packets on port 0 queue 2
 
+==== Packet Stats (every 2s) ====
+Core 1: Port 0 | TX: 0 | RX: 0
+Core 2: Port 1 | TX: 0 | RX: 0
+Core 3: Port 0 | TX: 0 | RX: 0
+
+==== Packet Stats (every 2s) ====
+Core 1: Port 0 | TX: 0 | RX: 0
+Core 2: Port 1 | TX: 0 | RX: 0
+Core 3: Port 0 | TX: 0 | RX: 0
+[RX] Core 1 | Port 0 | Queue 0 | Packets: 1
+[BUILD] Port 0 | AI Tag: 3 | Priority: 4 | Session: 1761554974
+[TX] Core 3 | Port 0 | Queue 2
+[RX] Core 1 | Port 0 | Queue 0 | Packets: 1
+[BUILD] Port 1 | AI Tag: 2 | Priority: 5 | Session: 1762493504
+[TX] Core 2 | Port 1 | Queue 1
+[RX] Core 1 | Port 0 | Queue 0 | Packets: 1
+[BUILD] Port 1 | AI Tag: 2 | Priority: 5 | Session: 1763467882
+[TX] Core 2 | Port 1 | Queue 1
+[RX] Core 1 | Port 0 | Queue 0 | Packets: 1
+[BUILD] Port 1 | AI Tag: 2 | Priority: 5 | Session: 1764175387
+[TX] Core 2 | Port 1 | Queue 1
+[RX] Core 1 | Port 0 | Queue 0 | Packets: 1
+[BUILD] Port 1 | AI Tag: 2 | Priority: 5 | Session: 1765343774
+[TX] Core 2 | Port 1 | Queue 1
+[RX] Core 1 | Port 0 | Queue 0 | Packets: 1
+[BUILD] Port 0 | AI Tag: 3 | Priority: 4 | Session: 1766036855
+[TX] Core 3 | Port 0 | Queue 2
+[RX] Core 1 | Port 0 | Queue 0 | Packets: 1
+[BUILD] Port 1 | AI Tag: 2 | Priority: 5 | Session: 1766972809
+[TX] Core 2 | Port 1 | Queue 1
+[RX] Core 1 | Port 0 | Queue 0 | Packets: 1
+[BUILD] Port 0 | AI Tag: 3 | Priority: 4 | Session: 1767899349
+[TX] Core 3 | Port 0 | Queue 2
+[RX] Core 1 | Port 0 | Queue 0 | Packets: 1
+[BUILD] Port 1 | AI Tag: 2 | Priority: 5 | Session: 1769062844
+[TX] Core 2 | Port 1 | Queue 1
+[RX] Core 1 | Port 0 | Queue 0 | Packets: 1
+[BUILD] Port 0 | AI Tag: 3 | Priority: 4 | Session: 1769989521
+[TX] Core 3 | Port 0 | Queue 2
+
+==== Packet Stats (every 2s) ====
+Core 1: Port 0 | TX: 0 | RX: 10
+Core 2: Port 1 | TX: 6 | RX: 0
+Core 3: Port 0 | TX: 4 | RX: 0
+
+
+```
 ## 📄 License
 
 GNU Affero General Public License v3.0
